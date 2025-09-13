@@ -3,6 +3,7 @@ import Main from './pages/Main';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import { Toaster } from 'react-hot-toast';
+import LoginRequiredRoute from './features/auth/components/LoginRequiredRoute';
 
 function App() {
 
@@ -10,7 +11,9 @@ function App() {
     <BrowserRouter>
       <Toaster position='top-center' />
       <Routes>
-        <Route path='/' element={<Main />} />
+        <Route path='/' element={
+          <LoginRequiredRoute children={<Main />} />
+        } />
         <Route path='/login' element={<Login />} />
         <Route path='/register' element={<Register />} />
       </Routes>
