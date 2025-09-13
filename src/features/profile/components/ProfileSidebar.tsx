@@ -1,5 +1,9 @@
 import { ArrowLeftStartOnRectangleIcon, Cog6ToothIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
+import api from '../../../services/apiConfig';
+import { ApiEndpoints } from '../../../constants/endpoints';
+import { getAccessToken, setAccessToken, setRefreshToken } from '../../../utils/localStorageUtils';
+import { useNavigate } from 'react-router-dom';
 
 type ProfileSidebarProps = {
     isDisplay: boolean,
@@ -7,6 +11,24 @@ type ProfileSidebarProps = {
 }
 
 export default function ProfileSidebar({ isDisplay, onClose }: ProfileSidebarProps) {
+    const navigate = useNavigate();
+
+
+    const onClickLogout = async () => {
+        try {
+            const token = getAccessToken();
+            setAccessToken("");
+            setRefreshToken("");
+            navigate("/login");
+            await api.post(ApiEndpoints.LOGOUT, {
+                token
+            });
+        } catch (error: any) {
+            const message = error.response?.data.message || error.message;
+            console.error("Logout Error:", message);
+        }
+    }
+
     return (
         <AnimatePresence>
             {isDisplay &&
@@ -42,7 +64,7 @@ export default function ProfileSidebar({ isDisplay, onClose }: ProfileSidebarPro
                                     Settings
                                 </div>
                             </div>
-                            <div className='py-2 flex justify-center items-center hover:bg-gray-100 cursor-pointer'>
+                            <div className='py-2 flex justify-center items-center hover:bg-gray-100 cursor-pointer' onClick={onClickLogout}>
                                 <div className='px-3'>
                                     <ArrowLeftStartOnRectangleIcon className='w-8 text-black' />
                                 </div>

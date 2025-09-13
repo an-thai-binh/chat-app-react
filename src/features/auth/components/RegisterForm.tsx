@@ -44,7 +44,7 @@ export default function RegisterForm() {
             }
             const response = await axios.post(ApiEndpoints.REGISTER, payload);
             if (response.data.success) {
-                toast.success("Registration Successful. Return to Login page...")
+                toast.success("Registration Successful...")
                 setTimeout(() => {
                     navigate("/login");
                 }, 3000);
@@ -67,17 +67,17 @@ export default function RegisterForm() {
             <p className="text-center text-2xl font-bold">Create Account</p>
             <p className="text-center text-red-500 text-sm italic">{registerError}</p>
             <div>
-                <p>Username</p>
+                <label>Username<span className="text-red-500"> *</span></label>
                 <input {...register("username")} type="text" onFocus={() => setRegisterError("")} className="w-full h-10 p-3 rounded-lg border border-gray-300 outline-gray-300" />
                 <p className="ms-1 text-red-500 text-sm italic">{errors.username?.message}</p>
             </div>
             <div className="mt-3">
-                <p>Email</p>
+                <label>Email<span className="text-red-500"> *</span></label>
                 <input {...register("email")} type="text" onFocus={() => setRegisterError("")} className="w-full h-10 p-3 rounded-lg border border-gray-300 outline-gray-300" />
                 <p className="ms-1 text-red-500 text-sm italic">{errors.email?.message}</p>
             </div>
             <div className="mt-3">
-                <p>Password</p>
+                <label>Password<span className="text-red-500"> *</span></label>
                 <input {...register("password")} type="password" onFocus={() => setRegisterError("")}
                     onChange={(e) => {
                         register("password").onChange(e);
@@ -87,13 +87,13 @@ export default function RegisterForm() {
                 <p className="ms-1 text-red-500 text-sm italic">{errors.password?.message}</p>
             </div>
             <div className="mt-3">
-                <p>Confirm password</p>
+                <label>Confirm password<span className="text-red-500"> *</span></label>
                 <input {...register("confirmPassword")} type="password" onFocus={() => setRegisterError("")} className="w-full h-10 p-3 rounded-lg border border-gray-300 outline-gray-300" />
                 <p className="ms-1 text-red-500 text-sm italic">{errors.confirmPassword?.message}</p>
             </div>
             <div className="mt-3">
                 <div className="flex items-center">
-                    <p className="basis-1/3">Gender</p>
+                    <label className="basis-1/3">Gender<span className="text-red-500"> *</span></label>
                     <div className="basis-1/3 flex items-center">
                         <input {...register("isFemale")} type="radio" value="false" className="size-5" />
                         <label className="ms-2">Male</label>
@@ -106,8 +106,8 @@ export default function RegisterForm() {
             </div>
             <div className="mt-3">
                 <div className="flex items-center">
-                    <label className="me-3">Birthday</label>
-                    <input {...register("birthDate")} type="date" className="w-full h-10 p-3 rounded-lg border border-gray-300 outline-gray-300" />
+                    <label className="me-3">Birthday<span className="text-red-500"> *</span></label>
+                    <input {...register("birthDate")} type="date" className="flex-1 h-10 p-3 rounded-lg border border-gray-300 outline-gray-300" />
                     <p className="ms-1 text-red-500 text-sm italic">{errors.birthDate?.message}</p>
                 </div>
             </div>

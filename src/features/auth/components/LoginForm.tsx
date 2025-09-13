@@ -2,10 +2,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import z from "zod";
-import api from "../../../services/apiConfig";
 import { setAccessToken, setRefreshToken } from "../../../utils/localStorageUtils";
 import { ApiEndpoints } from "../../../constants/endpoints";
 import { useEffect, useState } from "react";
+import axios from "axios";
 
 const schema = z.object({
     identifier: z.string().min(1, "Username must not be blank"),
@@ -28,7 +28,7 @@ export default function LoginForm() {
     const onSubmit = async (data: FormData) => {
         try {
             setIsSubmittingLogin(true);
-            const response = await api.post(ApiEndpoints.LOGIN, data);
+            const response = await axios.post(ApiEndpoints.LOGIN, data);
             if (response.data.success) {
                 const { accessToken, refreshToken } = response.data.data;
                 setAccessToken(accessToken);
