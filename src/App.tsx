@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import { Toaster } from 'react-hot-toast';
 import LoginRequiredRoute from './features/auth/components/LoginRequiredRoute';
+import { MainHubProvider } from './contexts/MainHubProvider';
 
 function App() {
 
@@ -12,7 +13,11 @@ function App() {
       <Toaster position='top-center' />
       <Routes>
         <Route path='/' element={
-          <LoginRequiredRoute children={<Main />} />
+          <LoginRequiredRoute children={
+            <MainHubProvider>
+              <Main />
+            </MainHubProvider>
+          } />
         } />
         <Route path='/login' element={<Login />} />
         <Route path='/register' element={<Register />} />

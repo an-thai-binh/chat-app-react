@@ -4,5 +4,6 @@ export const ApiEndpoints = {
     REGISTER: `${baseUrl}/Authentication/register`,
     REFRESH: `${baseUrl}/Authentication/refresh`,
     LOGOUT: `${baseUrl}/Authentication/logout`,
-    INTROSPECT: `${baseUrl}/Authentication/introspect`
+    INTROSPECT: `${baseUrl}/Authentication/introspect`,
+    SEARCH_USER_IN_FRIEND: `${baseUrl}/User/searchUserInFriend`
 }
