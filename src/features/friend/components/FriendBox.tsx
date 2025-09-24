@@ -1,10 +1,11 @@
-import { XMarkIcon } from "@heroicons/react/20/solid";
+import { PlusIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import { useCallback, useEffect, useState } from "react";
 import { useMainHub } from "../../../contexts/MainHubProvider";
 import api from "../../../services/apiConfig";
 import { ApiEndpoints } from "../../../constants/endpoints";
 import type { UserFriendSearchResult } from "../interfaces/UserFriendSearchResult";
+import _, { debounce } from "lodash";
 
 type FriendBoxProps = {
     isDisplay: boolean,
@@ -14,45 +15,60 @@ export default function FriendBox({ isDisplay, onClose }: FriendBoxProps) {
     const { connection } = useMainHub();
     const [friendRequest, setFriendRequests] = useState<string>("");
     const [query, setQuery] = useState<string>("");
-    const [queryError, setQueryError] = useState<string>("");
     const [userFriendSearchResult, setUserFriendSearchResult] = useState<UserFriendSearchResult | null>(null);
 
+    const searchUserInFriend = async (value: string) => {
+        try {
+            const response = await api.get(ApiEndpoints.SEARCH_USER_IN_FRIEND, {
+                params: { query: value }
+            });
+            if (response.data.success) {
+                setUserFriendSearchResult(response.data.data);
+            }
+        } catch (error: any) {
+            const message = error.response?.data.message || error.message;
+            console.error("Search user failed: ", message);
+            setUserFriendSearchResult(null);
+        }
+    }
+
+    const debounceSearch = useCallback(debounce((value) => searchUserInFriend(value), 450), []);
+
+    /**
+     * Xử lý sự kiện khi nhập vào khung tìm kiếm bạn bè
+     * @param e onChange
+     * @returns void
+     */
+    const handleOnSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setUserFriendSearchResult(null);
+        setQuery(value);
+        if (!value) return;
+        debounceSearch(value);
+    }
+
+    /**
+     * Xử lý response gửi về từ hub
+     */
     useEffect(() => {
         if (!connection) return;
         // event list
-
+        connection.on("SendFriendRequestStatus", (success: boolean) => {
+            // console.log(success);
+        });
         return () => {
             // connection.off();
         }
     }, [connection])
 
-    const handleSearchUsername = useCallback(() => {
-        let timer: any;
-
-        return (e: React.ChangeEvent<HTMLInputElement>) => {
-            const value = e.target.value;
-            setQuery(value);
-
-            clearTimeout(timer);
-            timer = setTimeout(async () => {
-                if (value) {
-                    try {
-                        const response = await api.get(ApiEndpoints.SEARCH_USER_IN_FRIEND);
-                        if (response.data.success) {
-                            setUserFriendSearchResult(response.data.data);
-                        }
-                    } catch (error: any) {
-                        const message = error.response?.data.message || error.message;
-                        console.error("Search user failed: ", message);
-                        setQueryError("User not found");
-                    }
-                }
-            }, 500);
-        };
-    }, [])();
-
-    const sendFriendRequest = () => {
-
+    const sendFriendRequest = async (toId: string) => {
+        if (connection) {
+            try {
+                await connection.send("SendFriendRequest", toId);
+            } catch (error: any) {
+                console.error("Error sending friend request: ", error);
+            }
+        }
     }
 
     const cancelFriendRequest = () => {
@@ -74,36 +90,53 @@ export default function FriendBox({ isDisplay, onClose }: FriendBoxProps) {
                     <div className="relative w-96 min-h-fit bg-white rounded-md shadow-xl">
                         <XMarkIcon className="absolute right-[-1px] top-[-1px] w-5 text-gray-500 cursor-pointer" onClick={() => onClose()} />
                         <div className="p-4">
-                            <input type="text" className="p-2 w-full bg-gray-200 rounded-md outline-gray-400 focus:bg-white" placeholder="Type username..."></input>
-                            <p className="mt-3">Friend requests</p>
-                            <div className="">
-                                {/* <div className="my-1 flex justify-center">
+                            <input value={query} onChange={(e) => handleOnSearchInputChange(e)} type="text" className="p-2 w-full bg-gray-200 rounded-md outline-gray-400 focus:bg-white" placeholder="Type username..."></input>
+                            {userFriendSearchResult ?
+                                <div className="mt-3 px-2 flex justify-center">
                                     <div className="flex-1 overflow-hidden">
-                                        <p className="font-medium">binhan0607</p>
+                                        <p className="font-medium">{userFriendSearchResult.username}</p>
                                     </div>
-                                    <CheckCircleIcon className="w-8 text-green-400 cursor-pointer hover:text-green-600" />
-                                    <XCircleIcon className="w-8 text-red-400 cursor-pointer hover:text-red-600" />
+                                    {userFriendSearchResult.friendStatus === "NONE" &&
+                                        <button onClick={() => sendFriendRequest(userFriendSearchResult.id)} className="px-2 bg-gray-200 rounded-md hover:bg-gray-300" type="button"><span className="font-bold">+</span>Add friend</button>
+                                    }
+                                    {userFriendSearchResult.friendStatus === "PENDING" &&
+                                        <>
+                                            <CheckCircleIcon className="w-8 text-green-400 cursor-pointer hover:text-green-600" />
+                                            <XCircleIcon className="w-8 text-red-400 cursor-pointer hover:text-red-600" />
+                                        </>
+                                    }
+                                    {userFriendSearchResult.friendStatus === "FRIEND" &&
+                                        <div className="px-2 bg-gray-200 rounded-md">Friend</div>
+                                    }
                                 </div>
-                                <div className="my-1 flex justify-center">
-                                    <div className="flex-1 overflow-hidden">
-                                        <p className="font-medium">binhan0607</p>
-                                    </div>
-                                    <CheckCircleIcon className="w-8 text-green-400 cursor-pointer hover:text-green-600" />
-                                    <XCircleIcon className="w-8 text-red-400 cursor-pointer hover:text-red-600" />
-                                </div> */}
-                            </div>
-                            <p className="text-center text-gray-500">You don't have any request</p>
-                            {/* <div className="my-1 flex justify-center">
-                                <div className="flex-1 overflow-hidden">
-                                    <p className="font-medium">binhan0607</p>
-                                </div>
-                                <div className="px-3 bg-gray-200 rounded-2xl text-gray-500 hover:bg-gray-300 hover:text-gray-600 cursor-pointer">
-                                    <p>Add friend</p>
-                                </div>
-                                <div className="px-3 bg-red-400 rounded-2xl text-white hover:bg-red-500 hover:text-red-100 cursor-pointer">
-                                    <p>Cancel request</p>
-                                </div>
-                            </div> */}
+                                :
+                                <>
+                                    {!query ?
+                                        <div className="mt-3 px-2">
+                                            <p className="">Friend requests</p>
+                                            <div className="my-1 flex justify-center">
+                                                <div className="flex-1 overflow-hidden">
+                                                    <p className="font-medium">binhan0607</p>
+                                                </div>
+                                                <CheckCircleIcon className="w-8 text-green-400 cursor-pointer hover:text-green-600" />
+                                                <XCircleIcon className="w-8 text-red-400 cursor-pointer hover:text-red-600" />
+                                            </div>
+                                            <div className="my-1 flex justify-center">
+                                                <div className="flex-1 overflow-hidden">
+                                                    <p className="font-medium">binhan0607</p>
+                                                </div>
+                                                <CheckCircleIcon className="w-8 text-green-400 cursor-pointer hover:text-green-600" />
+                                                <XCircleIcon className="w-8 text-red-400 cursor-pointer hover:text-red-600" />
+                                            </div>
+                                            <p className="text-center text-gray-500">You don't have any request</p>
+                                        </div>
+                                        :
+                                        <div className="mt-3 flex justify-center">
+                                            <p>User not found</p>
+                                        </div>
+                                    }
+                                </>
+                            }
                         </div>
                     </div>
                 </div>
