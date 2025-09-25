@@ -31,7 +31,7 @@ export const MainHubProvider: React.FC<{ children: React.ReactNode }> = ({ child
             .catch((err: any) => console.error("Main hub connection failed: ", err));
 
         return () => {
-            newConnection.stop();
+            if (connection) connection.stop();
         };
     }, [newConnection]);
 

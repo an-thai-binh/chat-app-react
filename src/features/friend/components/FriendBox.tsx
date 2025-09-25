@@ -6,14 +6,15 @@ import api from "../../../services/apiConfig";
 import { ApiEndpoints } from "../../../constants/endpoints";
 import type { UserFriendSearchResult } from "../interfaces/UserFriendSearchResult";
 import _, { debounce } from "lodash";
+import type { FriendRequest } from "../interfaces/FriendRequest";
 
 type FriendBoxProps = {
     isDisplay: boolean,
-    onClose: () => void
+    onClose: () => void,
+    friendRequests: FriendRequest[]
 }
-export default function FriendBox({ isDisplay, onClose }: FriendBoxProps) {
+export default function FriendBox({ isDisplay, onClose, friendRequests }: FriendBoxProps) {
     const { connection } = useMainHub();
-    const [friendRequest, setFriendRequests] = useState<string>("");
     const [query, setQuery] = useState<string>("");
     const [userFriendSearchResult, setUserFriendSearchResult] = useState<UserFriendSearchResult | null>(null);
 
@@ -54,7 +55,9 @@ export default function FriendBox({ isDisplay, onClose }: FriendBoxProps) {
         if (!connection) return;
         // event list
         connection.on("SendFriendRequestStatus", (success: boolean) => {
-            // console.log(success);
+            if (success) {
+                setUserFriendSearchResult(prev => prev ? { ...prev, friendStatus: "PENDING", isSender: true } : prev);
+            }
         });
         return () => {
             // connection.off();
@@ -72,7 +75,13 @@ export default function FriendBox({ isDisplay, onClose }: FriendBoxProps) {
     }
 
     const cancelFriendRequest = () => {
+        if (connection) {
+            try {
 
+            } catch (error: any) {
+
+            }
+        }
     }
 
     const acceptFriendRequest = () => {
@@ -96,15 +105,22 @@ export default function FriendBox({ isDisplay, onClose }: FriendBoxProps) {
                                     <div className="flex-1 overflow-hidden">
                                         <p className="font-medium">{userFriendSearchResult.username}</p>
                                     </div>
+                                    {/* Không phải bạn bè */}
                                     {userFriendSearchResult.friendStatus === "NONE" &&
                                         <button onClick={() => sendFriendRequest(userFriendSearchResult.id)} className="px-2 bg-gray-200 rounded-md hover:bg-gray-300" type="button"><span className="font-bold">+</span>Add friend</button>
                                     }
-                                    {userFriendSearchResult.friendStatus === "PENDING" &&
+                                    {/* Đối phương đã gửi lời mời kết bạn */}
+                                    {userFriendSearchResult.friendStatus === "PENDING" && !userFriendSearchResult.isSender &&
                                         <>
                                             <CheckCircleIcon className="w-8 text-green-400 cursor-pointer hover:text-green-600" />
                                             <XCircleIcon className="w-8 text-red-400 cursor-pointer hover:text-red-600" />
                                         </>
                                     }
+                                    {/* Mình là người gửi lời mời kết bạn */}
+                                    {userFriendSearchResult.friendStatus === "PENDING" && userFriendSearchResult.isSender &&
+                                        <button onClick={() => { }} className="px-2 bg-red-200 rounded-md hover:bg-red-300" type="button">Cancel request</button>
+                                    }
+                                    {/* Đã là bạn bè */}
                                     {userFriendSearchResult.friendStatus === "FRIEND" &&
                                         <div className="px-2 bg-gray-200 rounded-md">Friend</div>
                                     }
@@ -114,21 +130,21 @@ export default function FriendBox({ isDisplay, onClose }: FriendBoxProps) {
                                     {!query ?
                                         <div className="mt-3 px-2">
                                             <p className="">Friend requests</p>
-                                            <div className="my-1 flex justify-center">
-                                                <div className="flex-1 overflow-hidden">
-                                                    <p className="font-medium">binhan0607</p>
-                                                </div>
-                                                <CheckCircleIcon className="w-8 text-green-400 cursor-pointer hover:text-green-600" />
-                                                <XCircleIcon className="w-8 text-red-400 cursor-pointer hover:text-red-600" />
-                                            </div>
-                                            <div className="my-1 flex justify-center">
-                                                <div className="flex-1 overflow-hidden">
-                                                    <p className="font-medium">binhan0607</p>
-                                                </div>
-                                                <CheckCircleIcon className="w-8 text-green-400 cursor-pointer hover:text-green-600" />
-                                                <XCircleIcon className="w-8 text-red-400 cursor-pointer hover:text-red-600" />
-                                            </div>
-                                            <p className="text-center text-gray-500">You don't have any request</p>
+                                            {friendRequests.length > 0 ?
+                                                friendRequests.map((request) => {
+                                                    return (
+                                                        <div className="my-1 flex justify-center">
+                                                            <div className="flex-1 overflow-hidden">
+                                                                <p className="font-medium">{request.user.username}</p>
+                                                            </div>
+                                                            <CheckCircleIcon className="w-8 text-green-400 cursor-pointer hover:text-green-600" />
+                                                            <XCircleIcon className="w-8 text-red-400 cursor-pointer hover:text-red-600" />
+                                                        </div>
+                                                    )
+                                                })
+                                                :
+                                                <p className="text-center text-gray-500">You don't have any request</p>
+                                            }
                                         </div>
                                         :
                                         <div className="mt-3 flex justify-center">
