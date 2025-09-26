@@ -1,4 +1,4 @@
-import { PlusIcon, XMarkIcon } from "@heroicons/react/20/solid";
+import { XMarkIcon } from "@heroicons/react/20/solid";
 import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import { useCallback, useEffect, useState } from "react";
 import { useMainHub } from "../../../contexts/MainHubProvider";
@@ -17,6 +17,13 @@ export default function FriendBox({ isDisplay, onClose, friendRequests }: Friend
     const { connection } = useMainHub();
     const [query, setQuery] = useState<string>("");
     const [userFriendSearchResult, setUserFriendSearchResult] = useState<UserFriendSearchResult | null>(null);
+
+    const handleCloseFriendBox = () => {
+        // reset state
+        setQuery("");
+        setUserFriendSearchResult(null);
+        onClose();
+    }
 
     const searchUserInFriend = async (value: string) => {
         try {
@@ -53,14 +60,24 @@ export default function FriendBox({ isDisplay, onClose, friendRequests }: Friend
      */
     useEffect(() => {
         if (!connection) return;
-        // event list
-        connection.on("SendFriendRequestStatus", (success: boolean) => {
+
+        const handleSendFriendRequestStatus = (success: boolean) => {
             if (success) {
                 setUserFriendSearchResult(prev => prev ? { ...prev, friendStatus: "PENDING", isSender: true } : prev);
             }
-        });
+        }
+
+        const handleCancelFriendRequestStatus = (toId: string) => {
+            setUserFriendSearchResult(prev => prev && prev.id === toId ? { ...prev, friendStatus: "NONE", isSender: false } : prev);
+        }
+
+        connection.on("SendFriendRequestStatus", handleSendFriendRequestStatus);
+
+        connection.on("CancelFriendRequestStatus", handleCancelFriendRequestStatus);
+
         return () => {
-            // connection.off();
+            connection.off("SendFriendRequestStatus", handleSendFriendRequestStatus);
+            connection.off("CancelFriendRequestStatus", handleCancelFriendRequestStatus);
         }
     }, [connection])
 
@@ -69,17 +86,17 @@ export default function FriendBox({ isDisplay, onClose, friendRequests }: Friend
             try {
                 await connection.send("SendFriendRequest", toId);
             } catch (error: any) {
-                console.error("Error sending friend request: ", error);
+                console.error("Error sending friend request: ", error.message);
             }
         }
     }
 
-    const cancelFriendRequest = () => {
+    const cancelFriendRequest = async (toId: string) => {
         if (connection) {
             try {
-
+                await connection.send("CancelFriendRequest", toId);
             } catch (error: any) {
-
+                console.error("Error cancel friend request: ", error.message);
             }
         }
     }
@@ -97,7 +114,7 @@ export default function FriendBox({ isDisplay, onClose, friendRequests }: Friend
             {isDisplay &&
                 <div className="fixed inset-0 flex justify-center items-center min-h-screen bg-opacity-50">
                     <div className="relative w-96 min-h-fit bg-white rounded-md shadow-xl">
-                        <XMarkIcon className="absolute right-[-1px] top-[-1px] w-5 text-gray-500 cursor-pointer" onClick={() => onClose()} />
+                        <XMarkIcon className="absolute right-[-1px] top-[-1px] w-5 text-gray-500 cursor-pointer" onClick={handleCloseFriendBox} />
                         <div className="p-4">
                             <input value={query} onChange={(e) => handleOnSearchInputChange(e)} type="text" className="p-2 w-full bg-gray-200 rounded-md outline-gray-400 focus:bg-white" placeholder="Type username..."></input>
                             {userFriendSearchResult ?
@@ -109,7 +126,7 @@ export default function FriendBox({ isDisplay, onClose, friendRequests }: Friend
                                     {userFriendSearchResult.friendStatus === "NONE" &&
                                         <button onClick={() => sendFriendRequest(userFriendSearchResult.id)} className="px-2 bg-gray-200 rounded-md hover:bg-gray-300" type="button"><span className="font-bold">+</span>Add friend</button>
                                     }
-                                    {/* Đối phương đã gửi lời mời kết bạn */}
+                                    {/* Đối phương gửi lời mời kết bạn */}
                                     {userFriendSearchResult.friendStatus === "PENDING" && !userFriendSearchResult.isSender &&
                                         <>
                                             <CheckCircleIcon className="w-8 text-green-400 cursor-pointer hover:text-green-600" />
@@ -118,7 +135,7 @@ export default function FriendBox({ isDisplay, onClose, friendRequests }: Friend
                                     }
                                     {/* Mình là người gửi lời mời kết bạn */}
                                     {userFriendSearchResult.friendStatus === "PENDING" && userFriendSearchResult.isSender &&
-                                        <button onClick={() => { }} className="px-2 bg-red-200 rounded-md hover:bg-red-300" type="button">Cancel request</button>
+                                        <button onClick={() => cancelFriendRequest(userFriendSearchResult.id)} className="px-2 bg-red-200 rounded-md hover:bg-red-300" type="button">Cancel request</button>
                                     }
                                     {/* Đã là bạn bè */}
                                     {userFriendSearchResult.friendStatus === "FRIEND" &&
@@ -133,7 +150,7 @@ export default function FriendBox({ isDisplay, onClose, friendRequests }: Friend
                                             {friendRequests.length > 0 ?
                                                 friendRequests.map((request) => {
                                                     return (
-                                                        <div className="my-1 flex justify-center">
+                                                        <div className="my-1 flex justify-center" key={request.id}>
                                                             <div className="flex-1 overflow-hidden">
                                                                 <p className="font-medium">{request.user.username}</p>
                                                             </div>

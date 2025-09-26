@@ -14,13 +14,29 @@ export default function Main() {
     const [isFriendBoxOpen, setIsFriendBoxOpen] = useState<boolean>(false);
     const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
 
+    // Xử lý sự kiện từ Hub gửi về
     useEffect(() => {
         if (!connection) return;
-        connection.on("SendFriendRequest", (friendRequest: FriendRequest) => {
+
+        const handleSendFriendRequest = (friendRequest: FriendRequest) => {
+
             setFriendRequests(prev => [...prev, friendRequest]);
-        });
+        }
+
+        const handleCancelFriendRequest = (fromId: string) => {
+            setFriendRequests(prev => prev.filter(request => request.user.id !== fromId));
+        }
+
+        connection.on("SendFriendRequest", handleSendFriendRequest);
+        connection.on("CancelFriendRequest", handleCancelFriendRequest);
+
+        return () => {
+            connection.off("SendFriendRequest", handleSendFriendRequest);
+            connection.off("CancelFriendRequest", handleCancelFriendRequest);
+        }
     }, [connection]);
 
+    // Lấy danh sách friend request
     useEffect(() => {
         const fetchFriendRequests = async () => {
             try {
