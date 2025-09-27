@@ -1,18 +1,23 @@
-import { Bars3Icon, UserIcon } from '@heroicons/react/20/solid';
+import { Bars3Icon, BellIcon, UserIcon } from '@heroicons/react/20/solid';
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import ProfileSidebar from '../features/profile/components/ProfileSidebar';
 import FriendBox from '../features/friend/components/FriendBox';
 import type { FriendRequest } from '../features/friend/interfaces/FriendRequest';
 import { useMainHub } from '../contexts/MainHubProvider';
 import { ApiEndpoints } from '../constants/endpoints';
 import api from '../services/apiConfig';
+import NotificationBox from '../features/notification/components/NotificationBox';
+import { useClickAway } from 'react-use';
+import { fa } from 'zod/locales';
 
 export default function Main() {
     const { connection } = useMainHub();
     const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
     const [isFriendBoxOpen, setIsFriendBoxOpen] = useState<boolean>(false);
     const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
+    const [isNotificationBoxOpen, setIsNotificationBoxOpen] = useState<boolean>(false);
+    const notificationBoxRef = useRef(null);
 
     // Xử lý sự kiện từ Hub gửi về
     useEffect(() => {
@@ -52,6 +57,11 @@ export default function Main() {
         fetchFriendRequests();
     }, []);
 
+    // Đóng cửa sổ thông báo khi click vào khu vực bên ngoài
+    useClickAway(notificationBoxRef, () => {
+        setIsNotificationBoxOpen(false);
+    });
+
     return (
         <>
             <ProfileSidebar isDisplay={isProfileOpen} onClose={() => setIsProfileOpen(prev => !prev)} />
@@ -76,6 +86,15 @@ export default function Main() {
                                     <div className='absolute right-0 top-0 w-2 h-2 font-bold bg-red-400 rounded-full cursor-pointer'></div>
                                     :
                                     <div className='absolute right-[2px] top-[-10px] w-2 h-2 font-bold cursor-pointer'>+</div>
+                            }
+                        </div>
+                        <div className='ms-3 relative' ref={notificationBoxRef} >
+                            <BellIcon className='relative text-gray-800 w-6 cursor-pointer' onClick={() => setIsNotificationBoxOpen(prev => !prev)} />
+                            <div className='absolute right-0 top-0 w-2 h-2 font-bold bg-red-400 rounded-full cursor-pointer'></div>
+                            {isNotificationBoxOpen &&
+                                <div className='absolute top-[100%] right-0 lg:left-[-120px] w-[300px]'>
+                                    <NotificationBox />
+                                </div>
                             }
                         </div>
                     </div>

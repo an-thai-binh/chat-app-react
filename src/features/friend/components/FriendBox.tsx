@@ -7,6 +7,7 @@ import { ApiEndpoints } from "../../../constants/endpoints";
 import type { UserFriendSearchResult } from "../interfaces/UserFriendSearchResult";
 import _, { debounce } from "lodash";
 import type { FriendRequest } from "../interfaces/FriendRequest";
+import useAuth from "../../auth/hooks/useAuth";
 
 type FriendBoxProps = {
     isDisplay: boolean,
@@ -14,6 +15,7 @@ type FriendBoxProps = {
     friendRequests: FriendRequest[]
 }
 export default function FriendBox({ isDisplay, onClose, friendRequests }: FriendBoxProps) {
+    const { sub } = useAuth();
     const { connection } = useMainHub();
     const [query, setQuery] = useState<string>("");
     const [userFriendSearchResult, setUserFriendSearchResult] = useState<UserFriendSearchResult | null>(null);
@@ -109,6 +111,48 @@ export default function FriendBox({ isDisplay, onClose, friendRequests }: Friend
 
     }
 
+    const renderSearchFriendResult = (userFriendSearchResult: UserFriendSearchResult) => {
+        if (userFriendSearchResult.id === sub) {
+            return <div className="px-2 bg-gray-200 rounded-md">You</div>;
+        }
+
+        switch (userFriendSearchResult.friendStatus) {
+            case "NONE":
+                return (
+                    <button
+                        onClick={() => sendFriendRequest(userFriendSearchResult.id)}
+                        className="px-2 bg-gray-200 rounded-md hover:bg-gray-300"
+                        type="button"
+                    >
+                        <span className="font-bold">+</span>Add friend
+                    </button>
+                );
+            case "PENDING":
+                if (userFriendSearchResult.isSender) {
+                    return (
+                        <button
+                            onClick={() => cancelFriendRequest(userFriendSearchResult.id)}
+                            className="px-2 bg-red-200 rounded-md hover:bg-red-300"
+                            type="button"
+                        >
+                            Cancel request
+                        </button>
+                    );
+                } else {
+                    return (
+                        <>
+                            <CheckCircleIcon className="w-8 text-green-400 cursor-pointer hover:text-green-600" />
+                            <XCircleIcon className="w-8 text-red-400 cursor-pointer hover:text-red-600" />
+                        </>
+                    );
+                }
+            case "FRIEND":
+                return <div className="px-2 bg-gray-200 rounded-md">Friend</div>;
+            default:
+                return null;
+        }
+    }
+
     return (
         <>
             {isDisplay &&
@@ -122,25 +166,7 @@ export default function FriendBox({ isDisplay, onClose, friendRequests }: Friend
                                     <div className="flex-1 overflow-hidden">
                                         <p className="font-medium">{userFriendSearchResult.username}</p>
                                     </div>
-                                    {/* Không phải bạn bè */}
-                                    {userFriendSearchResult.friendStatus === "NONE" &&
-                                        <button onClick={() => sendFriendRequest(userFriendSearchResult.id)} className="px-2 bg-gray-200 rounded-md hover:bg-gray-300" type="button"><span className="font-bold">+</span>Add friend</button>
-                                    }
-                                    {/* Đối phương gửi lời mời kết bạn */}
-                                    {userFriendSearchResult.friendStatus === "PENDING" && !userFriendSearchResult.isSender &&
-                                        <>
-                                            <CheckCircleIcon className="w-8 text-green-400 cursor-pointer hover:text-green-600" />
-                                            <XCircleIcon className="w-8 text-red-400 cursor-pointer hover:text-red-600" />
-                                        </>
-                                    }
-                                    {/* Mình là người gửi lời mời kết bạn */}
-                                    {userFriendSearchResult.friendStatus === "PENDING" && userFriendSearchResult.isSender &&
-                                        <button onClick={() => cancelFriendRequest(userFriendSearchResult.id)} className="px-2 bg-red-200 rounded-md hover:bg-red-300" type="button">Cancel request</button>
-                                    }
-                                    {/* Đã là bạn bè */}
-                                    {userFriendSearchResult.friendStatus === "FRIEND" &&
-                                        <div className="px-2 bg-gray-200 rounded-md">Friend</div>
-                                    }
+                                    {renderSearchFriendResult(userFriendSearchResult)}
                                 </div>
                                 :
                                 <>
