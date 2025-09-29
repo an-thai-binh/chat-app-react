@@ -14,6 +14,7 @@
     "@hookform/resolvers": "^5.1.1",
     "@microsoft/signalr": "^9.0.6",
     "axios": "^1.10.0",
+    "dayjs": "^1.11.18",
     "framer-motion": "^12.23.3",
     "jwt-decode": "^4.0.0",
     "lodash": "^4.17.21",

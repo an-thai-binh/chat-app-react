@@ -6,5 +6,7 @@ export const ApiEndpoints = {
     LOGOUT: `${baseUrl}/Authentication/logout`,
     INTROSPECT: `${baseUrl}/Authentication/introspect`,
     SEARCH_USER_IN_FRIEND: `${baseUrl}/User/searchUserInFriend`,
-    GET_FRIEND_REQUESTS: `${baseUrl}/Friendship/friendRequests`
+    GET_FRIEND_REQUESTS: `${baseUrl}/Friendship/friendRequests`,
+    GET_LATEST_NOTIFICATIONS: `${baseUrl}/Notification/latest/10`,
+    MASK_AS_READ: `${baseUrl}/Notification/maskAsRead`
 }

@@ -9,7 +9,7 @@ import { ApiEndpoints } from '../constants/endpoints';
 import api from '../services/apiConfig';
 import NotificationBox from '../features/notification/components/NotificationBox';
 import { useClickAway } from 'react-use';
-import { fa } from 'zod/locales';
+import type { Notification } from '../features/notification/interfaces/Notification';
 
 export default function Main() {
     const { connection } = useMainHub();
@@ -18,6 +18,7 @@ export default function Main() {
     const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
     const [isNotificationBoxOpen, setIsNotificationBoxOpen] = useState<boolean>(false);
     const notificationBoxRef = useRef(null);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
 
     // Xử lý sự kiện từ Hub gửi về
     useEffect(() => {
@@ -32,12 +33,30 @@ export default function Main() {
             setFriendRequests(prev => prev.filter(request => request.user.id !== fromId));
         }
 
+        const handleAcceptFriendRequest = (notification: Notification) => {
+            setNotifications(prev => [...prev, notification]);
+        }
+
+        const handleAcceptFriendRequestStatus = (fromId: string) => {
+            setFriendRequests(prev => prev.filter(request => request.user.id !== fromId));
+        }
+
+        const handleDeclineFriendRequestStatus = (fromId: string) => {
+            setFriendRequests(prev => prev.filter(request => request.user.id !== fromId));
+        }
+
         connection.on("SendFriendRequest", handleSendFriendRequest);
         connection.on("CancelFriendRequest", handleCancelFriendRequest);
+        connection.on("AcceptFriendRequest", handleAcceptFriendRequest);
+        connection.on("AcceptFriendRequestStatus", handleAcceptFriendRequestStatus);
+        connection.on("DeclineFriendRequestStatus", handleDeclineFriendRequestStatus);
 
         return () => {
             connection.off("SendFriendRequest", handleSendFriendRequest);
             connection.off("CancelFriendRequest", handleCancelFriendRequest);
+            connection.off("AcceptFriendRequest", handleAcceptFriendRequest);
+            connection.off("AcceptFriendRequestStatus", handleAcceptFriendRequestStatus);
+            connection.off("DeclineFriendRequestStatus", handleDeclineFriendRequestStatus);
         }
     }, [connection]);
 
@@ -61,6 +80,22 @@ export default function Main() {
     useClickAway(notificationBoxRef, () => {
         setIsNotificationBoxOpen(false);
     });
+
+    // Lấy danh sách notification
+    useEffect(() => {
+        const fetchNotifications = async () => {
+            try {
+                const response = await api.get(ApiEndpoints.GET_LATEST_NOTIFICATIONS);
+                if (response.data.success) {
+                    setNotifications(response.data.data);
+                }
+            } catch (error: any) {
+                const message = error.response?.data.message || error.message;
+                console.error("Fetch notifications failed: ", message);
+            }
+        }
+        fetchNotifications();
+    }, [])
 
     return (
         <>
@@ -90,10 +125,12 @@ export default function Main() {
                         </div>
                         <div className='ms-3 relative' ref={notificationBoxRef} >
                             <BellIcon className='relative text-gray-800 w-6 cursor-pointer' onClick={() => setIsNotificationBoxOpen(prev => !prev)} />
-                            <div className='absolute right-0 top-0 w-2 h-2 font-bold bg-red-400 rounded-full cursor-pointer'></div>
+                            {notifications.filter(n => n.isRead == false).length > 0 &&
+                                <div className='absolute right-0 top-0 w-2 h-2 font-bold bg-red-400 rounded-full cursor-pointer'></div>
+                            }
                             {isNotificationBoxOpen &&
-                                <div className='absolute top-[100%] right-0 lg:left-[-120px] w-[300px]'>
-                                    <NotificationBox />
+                                <div className='absolute top-[100%] right-0 md:left-[-120px] w-[300px]'>
+                                    <NotificationBox notifications={notifications} setNotifications={setNotifications} />
                                 </div>
                             }
                         </div>

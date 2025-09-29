@@ -8,6 +8,7 @@ import type { UserFriendSearchResult } from "../interfaces/UserFriendSearchResul
 import _, { debounce } from "lodash";
 import type { FriendRequest } from "../interfaces/FriendRequest";
 import useAuth from "../../auth/hooks/useAuth";
+import { formatTimeAgo } from "../../../utils/Formatter";
 
 type FriendBoxProps = {
     isDisplay: boolean,
@@ -73,13 +74,24 @@ export default function FriendBox({ isDisplay, onClose, friendRequests }: Friend
             setUserFriendSearchResult(prev => prev && prev.id === toId ? { ...prev, friendStatus: "NONE", isSender: false } : prev);
         }
 
-        connection.on("SendFriendRequestStatus", handleSendFriendRequestStatus);
+        const handleAcceptFriendRequestStatus = (fromId: string) => {
+            setUserFriendSearchResult(prev => prev && prev.id === fromId ? { ...prev, friendStatus: "FRIEND" } : prev);
+        }
 
+        const handleDeclineFriendRequestStatus = (fromId: string) => {
+            setUserFriendSearchResult(prev => prev && prev.id === fromId ? { ...prev, friendStatus: "NONE" } : prev);
+        }
+
+        connection.on("SendFriendRequestStatus", handleSendFriendRequestStatus);
         connection.on("CancelFriendRequestStatus", handleCancelFriendRequestStatus);
+        connection.on("AcceptFriendRequestStatus", handleAcceptFriendRequestStatus);
+        connection.on("DeclineFriendRequestStatus", handleDeclineFriendRequestStatus);
 
         return () => {
             connection.off("SendFriendRequestStatus", handleSendFriendRequestStatus);
             connection.off("CancelFriendRequestStatus", handleCancelFriendRequestStatus);
+            connection.off("AcceptFriendRequestStatus", handleAcceptFriendRequestStatus);
+            connection.off("DeclineFriendRequestStatus", handleDeclineFriendRequestStatus);
         }
     }, [connection])
 
@@ -103,12 +115,24 @@ export default function FriendBox({ isDisplay, onClose, friendRequests }: Friend
         }
     }
 
-    const acceptFriendRequest = () => {
-
+    const acceptFriendRequest = async (fromId: string) => {
+        if (connection) {
+            try {
+                await connection.send("AcceptFriendRequest", fromId);
+            } catch (error: any) {
+                console.error("Error accept friend request: ", error.message);
+            }
+        }
     }
 
-    const declineFriendRequest = () => {
-
+    const declineFriendRequest = async (fromId: string) => {
+        if (connection) {
+            try {
+                await connection.send("DeclineFriendRequest", fromId)
+            } catch (error: any) {
+                console.error("Error accept friend request: ", error.message);
+            }
+        }
     }
 
     const renderSearchFriendResult = (userFriendSearchResult: UserFriendSearchResult) => {
@@ -141,8 +165,8 @@ export default function FriendBox({ isDisplay, onClose, friendRequests }: Friend
                 } else {
                     return (
                         <>
-                            <CheckCircleIcon className="w-8 text-green-400 cursor-pointer hover:text-green-600" />
-                            <XCircleIcon className="w-8 text-red-400 cursor-pointer hover:text-red-600" />
+                            <CheckCircleIcon onClick={() => acceptFriendRequest(userFriendSearchResult.id)} className="w-8 text-green-400 cursor-pointer hover:text-green-600" />
+                            <XCircleIcon onClick={() => declineFriendRequest(userFriendSearchResult.id)} className="w-8 text-red-400 cursor-pointer hover:text-red-600" />
                         </>
                     );
                 }
@@ -176,12 +200,13 @@ export default function FriendBox({ isDisplay, onClose, friendRequests }: Friend
                                             {friendRequests.length > 0 ?
                                                 friendRequests.map((request) => {
                                                     return (
-                                                        <div className="my-1 flex justify-center" key={request.id}>
+                                                        <div className="my-1 flex justify-center items-center" key={request.id}>
                                                             <div className="flex-1 overflow-hidden">
                                                                 <p className="font-medium">{request.user.username}</p>
+                                                                <p className="text-sm">{formatTimeAgo(request.createdAt)}</p>
                                                             </div>
-                                                            <CheckCircleIcon className="w-8 text-green-400 cursor-pointer hover:text-green-600" />
-                                                            <XCircleIcon className="w-8 text-red-400 cursor-pointer hover:text-red-600" />
+                                                            <CheckCircleIcon onClick={() => acceptFriendRequest(request.user.id)} className="w-8 text-green-400 cursor-pointer hover:text-green-600" />
+                                                            <XCircleIcon onClick={() => declineFriendRequest(request.user.id)} className="w-8 text-red-400 cursor-pointer hover:text-red-600" />
                                                         </div>
                                                     )
                                                 })
