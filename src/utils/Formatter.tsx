@@ -6,3 +6,7 @@ dayjs.extend(relativeTime);
 export function formatTimeAgo(timestamp: string | Date): string {
     return dayjs(timestamp).fromNow();
 }
+
+export function formatDateOnly(timestamp: string | Date): string {
+    return dayjs(timestamp).format("DD/MM/YYYY");
+}

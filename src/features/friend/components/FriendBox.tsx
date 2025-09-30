@@ -180,7 +180,7 @@ export default function FriendBox({ isDisplay, onClose, friendRequests }: Friend
     return (
         <>
             {isDisplay &&
-                <div className="fixed inset-0 flex justify-center items-center min-h-screen bg-opacity-50">
+                <div className="fixed inset-0 z-40 flex justify-center items-center min-h-screen">
                     <div className="relative w-96 min-h-fit bg-white rounded-md shadow-xl">
                         <XMarkIcon className="absolute right-[-1px] top-[-1px] w-5 text-gray-500 cursor-pointer" onClick={handleCloseFriendBox} />
                         <div className="p-4">

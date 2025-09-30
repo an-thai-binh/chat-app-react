@@ -8,5 +8,6 @@ export const ApiEndpoints = {
     SEARCH_USER_IN_FRIEND: `${baseUrl}/User/searchUserInFriend`,
     GET_FRIEND_REQUESTS: `${baseUrl}/Friendship/friendRequests`,
     GET_LATEST_NOTIFICATIONS: `${baseUrl}/Notification/latest/10`,
-    MASK_AS_READ: `${baseUrl}/Notification/maskAsRead`
+    MASK_AS_READ: `${baseUrl}/Notification/maskAsRead`,
+    GET_USER_PROFILE: `${baseUrl}/User/profile`,
 }

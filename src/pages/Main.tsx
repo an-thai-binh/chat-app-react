@@ -10,6 +10,8 @@ import api from '../services/apiConfig';
 import NotificationBox from '../features/notification/components/NotificationBox';
 import { useClickAway } from 'react-use';
 import type { Notification } from '../features/notification/interfaces/Notification';
+import ProfileBox from '../features/profile/components/ProfileBox';
+import type { UserProfile } from '../features/profile/interfaces/UserProfile';
 
 export default function Main() {
     const { connection } = useMainHub();
@@ -19,6 +21,7 @@ export default function Main() {
     const [isNotificationBoxOpen, setIsNotificationBoxOpen] = useState<boolean>(false);
     const notificationBoxRef = useRef(null);
     const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [profile, setProfile] = useState<UserProfile | null>(null);
 
     // Xử lý sự kiện từ Hub gửi về
     useEffect(() => {
@@ -99,11 +102,19 @@ export default function Main() {
 
     return (
         <>
-            <ProfileSidebar isDisplay={isProfileOpen} onClose={() => setIsProfileOpen(prev => !prev)} />
+            <ProfileSidebar
+                isDisplay={isProfileOpen}
+                onClose={() => setIsProfileOpen(prev => !prev)}
+                setProfile={setProfile}
+            />
             <FriendBox
                 isDisplay={isFriendBoxOpen}
                 onClose={() => setIsFriendBoxOpen(prev => !prev)}
                 friendRequests={friendRequests}
+            />
+            <ProfileBox
+                profile={profile}
+                setProfile={setProfile}
             />
             <div className='grid grid-cols-1 md:grid-cols-4 w-full min-h-screen'>
                 <div className='md:col-span-1 bg-white'>
