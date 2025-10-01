@@ -10,24 +10,21 @@ import useAuth from '../../auth/hooks/useAuth';
 type ProfileSidebarProps = {
     isDisplay: boolean,
     onClose: () => void;
-    setProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>
+    setIsProfileBoxOpen: React.Dispatch<React.SetStateAction<boolean>>
+    setIsFriendListBoxOpen: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-export default function ProfileSidebar({ isDisplay, onClose, setProfile }: ProfileSidebarProps) {
+export default function ProfileSidebar({ isDisplay, onClose, setIsProfileBoxOpen, setIsFriendListBoxOpen }: ProfileSidebarProps) {
     const navigate = useNavigate();
-    const { sub } = useAuth();
 
     const onClickMyProfile = async () => {
-        try {
-            const response = await api.get(ApiEndpoints.GET_USER_PROFILE + "/" + sub);
-            if (response.data.success) {
-                setProfile(response.data.data);
-                onClose();
-            }
-        } catch (error: any) {
-            const message = error.response?.data.message || error.message;
-            console.error("Fetch user profile error: " + message);
-        }
+        onClose();
+        setIsProfileBoxOpen(true);
+    }
+
+    const onClickFriends = () => {
+        onClose();
+        setIsFriendListBoxOpen(true);
     }
 
     const onClickLogout = async () => {
@@ -72,7 +69,7 @@ export default function ProfileSidebar({ isDisplay, onClose, setProfile }: Profi
                                     My Profile
                                 </div>
                             </div>
-                            <div className='py-2 flex justify-center items-center hover:bg-gray-100 cursor-pointer'>
+                            <div className='py-2 flex justify-center items-center hover:bg-gray-100 cursor-pointer' onClick={onClickFriends}>
                                 <div className='px-3'>
                                     <UserGroupIcon className='w-8 text-black' />
                                 </div>

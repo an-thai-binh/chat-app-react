@@ -12,16 +12,18 @@ import { useClickAway } from 'react-use';
 import type { Notification } from '../features/notification/interfaces/Notification';
 import ProfileBox from '../features/profile/components/ProfileBox';
 import type { UserProfile } from '../features/profile/interfaces/UserProfile';
+import FriendListBox from '../features/friend/components/FriendListBox';
 
 export default function Main() {
     const { connection } = useMainHub();
-    const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
+    const [isSideBarOpen, setIsSideBarOpen] = useState<boolean>(false);
     const [isFriendBoxOpen, setIsFriendBoxOpen] = useState<boolean>(false);
     const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
     const [isNotificationBoxOpen, setIsNotificationBoxOpen] = useState<boolean>(false);
     const notificationBoxRef = useRef(null);
     const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [isProfileBoxOpen, setIsProfileBoxOpen] = useState<boolean>(false);
+    const [isFriendListBoxOpen, setIsFriendListBoxOpen] = useState<boolean>(false);
 
     // Xử lý sự kiện từ Hub gửi về
     useEffect(() => {
@@ -103,24 +105,31 @@ export default function Main() {
     return (
         <>
             <ProfileSidebar
-                isDisplay={isProfileOpen}
-                onClose={() => setIsProfileOpen(prev => !prev)}
-                setProfile={setProfile}
+                isDisplay={isSideBarOpen}
+                onClose={() => setIsSideBarOpen(prev => !prev)}
+                setIsProfileBoxOpen={setIsProfileBoxOpen}
+                setIsFriendListBoxOpen={setIsFriendListBoxOpen}
             />
             <FriendBox
                 isDisplay={isFriendBoxOpen}
                 onClose={() => setIsFriendBoxOpen(prev => !prev)}
                 friendRequests={friendRequests}
             />
-            <ProfileBox
-                profile={profile}
-                setProfile={setProfile}
-            />
+            {isProfileBoxOpen &&
+                <ProfileBox
+                    onClose={() => setIsProfileBoxOpen(prev => !prev)}
+                />
+            }
+            {isFriendListBoxOpen &&
+                <FriendListBox
+                    onClose={() => setIsFriendListBoxOpen(prev => !prev)}
+                />
+            }
             <div className='grid grid-cols-1 md:grid-cols-4 w-full min-h-screen'>
                 <div className='md:col-span-1 bg-white'>
                     <div className='p-2 flex justify-center items-center'>
                         <div className='me-3'>
-                            <Bars3Icon className='text-gray-800 w-6 cursor-pointer' onClick={() => setIsProfileOpen(prev => !prev)} />
+                            <Bars3Icon className='text-gray-800 w-6 cursor-pointer' onClick={() => setIsSideBarOpen(prev => !prev)} />
                         </div>
                         <div className='flex-1'>
                             <input type='text' className='ps-3 h-8 bg-gray-200 rounded-full w-full focus:bg-white focus:outline-gray-200' placeholder='Search' />
