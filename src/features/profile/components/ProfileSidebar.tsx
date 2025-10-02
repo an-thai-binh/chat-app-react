@@ -4,8 +4,6 @@ import api from '../../../services/apiConfig';
 import { ApiEndpoints } from '../../../constants/endpoints';
 import { getAccessToken, setAccessToken, setRefreshToken } from '../../../utils/localStorageUtils';
 import { useNavigate } from 'react-router-dom';
-import type { UserProfile } from '../interfaces/UserProfile';
-import useAuth from '../../auth/hooks/useAuth';
 
 type ProfileSidebarProps = {
     isDisplay: boolean,

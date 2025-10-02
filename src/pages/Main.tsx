@@ -11,7 +11,6 @@ import NotificationBox from '../features/notification/components/NotificationBox
 import { useClickAway } from 'react-use';
 import type { Notification } from '../features/notification/interfaces/Notification';
 import ProfileBox from '../features/profile/components/ProfileBox';
-import type { UserProfile } from '../features/profile/interfaces/UserProfile';
 import FriendListBox from '../features/friend/components/FriendListBox';
 
 export default function Main() {
